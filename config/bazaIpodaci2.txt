@@ -1,0 +1,181 @@
+-- Kreiranje baze podataka
+CREATE DATABASE IF NOT EXISTS recipe;
+USE recipe;
+
+-- Kreiranje tabele users
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
+    phone VARCHAR(50),
+    role ENUM('user', 'admin') DEFAULT 'user',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Kreiranje tabele categories
+CREATE TABLE categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+
+-- Kreiranje tabele ingredients
+CREATE TABLE ingredients (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    unit VARCHAR(50) NOT NULL
+);
+
+-- Kreiranje tabele recipes
+CREATE TABLE recipes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    category_id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    image VARCHAR(255),
+    price DECIMAL(10, 2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (category_id) REFERENCES categories(id)
+);
+
+-- Kreiranje tabele recipe_ingredients
+CREATE TABLE recipe_ingredients (
+    recipe_id INT NOT NULL,
+    ingredient_id INT NOT NULL,
+    quantity DECIMAL(10, 2) NOT NULL,
+    PRIMARY KEY (recipe_id, ingredient_id),
+    FOREIGN KEY (recipe_id) REFERENCES recipes(id),
+    FOREIGN KEY (ingredient_id) REFERENCES ingredients(id)
+);
+
+-- Kreiranje tabele comments
+CREATE TABLE comments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    recipe_id INT NOT NULL,
+    user_id INT NOT NULL,
+    content TEXT NOT NULL,
+    rating INT CHECK (rating BETWEEN 1 AND 5),
+    approved BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (recipe_id) REFERENCES recipes(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Kreiranje tabele menus
+CREATE TABLE menus (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    day_of_week ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday') NOT NULL,
+    user_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Kreiranje tabele menu_recipes
+CREATE TABLE menu_recipes (
+    menu_id INT NOT NULL,
+    recipe_id INT NOT NULL,
+    PRIMARY KEY (menu_id, recipe_id),
+    FOREIGN KEY (menu_id) REFERENCES menus(id),
+    FOREIGN KEY (recipe_id) REFERENCES recipes(id)
+);
+
+CREATE TABLE favorites (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    recipe_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (recipe_id) REFERENCES recipes(id)
+);
+
+******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************
+USE recipe;
+
+-- Popunjavanje tabele users
+INSERT INTO users (email, password, first_name, last_name, role)
+VALUES
+('admin@example.com', '$2y$10$7C1ZpY9.fh3.LKwKYeWbNeKyCj3W4wcf5BOLpk/fIPuxTukUhsyD.', 'Admin', 'User', 'admin'),
+('user1@example.com', '$2y$10$7C1ZpY9.fh3.LKwKYeWbNeKyCj3W4wcf5BOLpk/fIPuxTukUhsyD.', 'User', 'One', 'user'),
+('user2@example.com', '$2y$10$7C1ZpY9.fh3.LKwKYeWbNeKyCj3W4wcf5BOLpk/fIPuxTukUhsyD.', 'User', 'Two', 'user');
+
+-- Popunjavanje tabele categories
+INSERT INTO categories (name)
+VALUES
+('Breakfast'),
+('Lunch'),
+('Dinner'),
+('Dessert'),
+('Snack');
+
+-- Popunjavanje tabele ingredients
+INSERT INTO ingredients (name, unit)
+VALUES
+('Flour', 'grams'),
+('Sugar', 'grams'),
+('Salt', 'grams'),
+('Eggs', 'pieces'),
+('Milk', 'ml'),
+('Butter', 'grams'),
+('Chicken Breast', 'grams'),
+('Tomato', 'pieces'),
+('Lettuce', 'pieces'),
+('Cheese', 'grams');
+
+-- Popunjavanje tabele recipes
+INSERT INTO recipes (user_id, category_id, name, description, image, price)
+VALUES
+(1, 1, 'Pancakes', 'Delicious fluffy pancakes.', 'pancakes.jpg', 5.00),
+(1, 2, 'Chicken Salad', 'Healthy chicken salad with tomatoes and lettuce.', 'chicken_salad.jpg', 7.50),
+(2, 3, 'Spaghetti Carbonara', 'Classic Italian pasta dish.', 'carbonara.jpg', 8.00),
+(2, 4, 'Chocolate Cake', 'Rich chocolate cake for dessert.', 'chocolate_cake.jpg', 10.00),
+(3, 5, 'Fruit Smoothie', 'Refreshing smoothie with mixed fruits.', 'smoothie.jpg', 4.00);
+
+-- Popunjavanje tabele recipe_ingredients
+INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity)
+VALUES
+(1, 1, 200), -- Pancakes - Flour
+(1, 2, 50),  -- Pancakes - Sugar
+(1, 3, 5),   -- Pancakes - Salt
+(1, 4, 2),   -- Pancakes - Eggs
+(1, 5, 300), -- Pancakes - Milk
+(2, 7, 300), -- Chicken Salad - Chicken Breast
+(2, 8, 2),   -- Chicken Salad - Tomato
+(2, 9, 1),   -- Chicken Salad - Lettuce
+(2, 10, 50), -- Chicken Salad - Cheese
+(3, 1, 150), -- Spaghetti Carbonara - Flour
+(3, 4, 2),   -- Spaghetti Carbonara - Eggs
+(3, 6, 100), -- Spaghetti Carbonara - Butter
+(4, 1, 200), -- Chocolate Cake - Flour
+(4, 2, 100), -- Chocolate Cake - Sugar
+(4, 4, 3),   -- Chocolate Cake - Eggs
+(4, 5, 200), -- Chocolate Cake - Milk
+(4, 6, 100), -- Chocolate Cake - Butter
+(5, 8, 1),   -- Fruit Smoothie - Tomato (assuming it is part of the mixed fruits)
+(5, 5, 200); -- Fruit Smoothie - Milk
+
+-- Popunjavanje tabele comments
+INSERT INTO comments (recipe_id, user_id, content, rating, approved)
+VALUES
+(1, 2, 'These pancakes are amazing!', 5, TRUE),
+(2, 3, 'Loved the chicken salad, very fresh.', 4, TRUE),
+(3, 1, 'Spaghetti Carbonara was delicious.', 5, TRUE),
+(4, 2, 'The chocolate cake was a bit too sweet for my taste.', 3, TRUE),
+(5, 3, 'Great smoothie for a hot day.', 4, TRUE);
+
+-- Popunjavanje tabele menus
+INSERT INTO menus (name, day_of_week, user_id)
+VALUES
+('Monday Menu', 'Monday', 2),
+('Wednesday Menu', 'Wednesday', 3);
+
+-- Popunjavanje tabele menu_recipes
+INSERT INTO menu_recipes (menu_id, recipe_id)
+VALUES
+(1, 1), -- Monday Menu - Pancakes
+(1, 2), -- Monday Menu - Chicken Salad
+(2, 3), -- Wednesday Menu - Spaghetti Carbonara
+(2, 5); -- Wednesday Menu - Fruit Smoothie
